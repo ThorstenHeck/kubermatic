@@ -69,6 +69,7 @@ type UserClusterMLA struct {
 	Monitoring                        bool
 	MLAGatewayURL                     string
 	MonitoringAgentScrapeConfigPrefix string
+	LoggingAgentScrapeConfigPrefix	  string
 }
 
 // Add creates a new user cluster controller.

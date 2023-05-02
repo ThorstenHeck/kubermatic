@@ -32,6 +32,7 @@ type Config struct {
 	TLSCertFile   string
 	TLSKeyFile    string
 	TLSCACertFile string
+  CustomScrapeConfigs string
 }
 
 func SecretReconciler(config Config) reconciling.NamedSecretReconcilerFactory {
@@ -375,6 +376,12 @@ logs:
             - __meta_kubernetes_pod_annotation_kubernetes_io_config_hash
             - __meta_kubernetes_pod_container_name
             target_label: __path__
+{{- with .CustomScrapeConfigs }}
+    #######################################################################
+    # custom scraping configurations
+{{ . | indent 4 }}
+{{- end }}
+
 `
 )
 

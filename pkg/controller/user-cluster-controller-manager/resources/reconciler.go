@@ -944,12 +944,17 @@ func (r *reconciler) reconcileSecrets(ctx context.Context, data reconcileData) e
 		}
 	}
 	if r.userClusterMLA.Logging {
+		customScrapeConfigs, err := r.getUserClusterLoggingAgentCustomScrapeConfigs(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to get user cluster grafana-agent custom scrape configs: %w", err)
+		}
 		creators = []reconciling.NamedSecretReconcilerFactory{
 			mlaloggingagent.SecretReconciler(mlaloggingagent.Config{
 				MLAGatewayURL: r.userClusterMLA.MLAGatewayURL + "/loki/api/v1/push",
 				TLSCertFile:   fmt.Sprintf("%s/%s", resources.MLALoggingAgentClientCertMountPath, resources.MLALoggingAgentClientCertSecretKey),
 				TLSKeyFile:    fmt.Sprintf("%s/%s", resources.MLALoggingAgentClientCertMountPath, resources.MLALoggingAgentClientKeySecretKey),
 				TLSCACertFile: fmt.Sprintf("%s/%s", resources.MLALoggingAgentClientCertMountPath, resources.MLAGatewayCACertKey),
+				CustomScrapeConfigs: customScrapeConfigs,
 			}),
 			mlaloggingagent.ClientCertificateReconciler(data.mlaGatewayCACert),
 		}
@@ -1415,6 +1420,26 @@ func (r *reconciler) getUserClusterMonitoringAgentCustomScrapeConfigs(ctx contex
 	customScrapeConfigs := ""
 	for _, configMap := range configMapList.Items {
 		if !strings.HasPrefix(configMap.GetName(), r.userClusterMLA.MonitoringAgentScrapeConfigPrefix) {
+			continue
+		}
+		for _, v := range configMap.Data {
+			customScrapeConfigs += strings.TrimSpace(v) + "\n"
+		}
+	}
+	return customScrapeConfigs, nil
+}
+
+func (r *reconciler) getUserClusterLoggingAgentCustomScrapeConfigs(ctx context.Context) (string, error) {
+	if r.userClusterMLA.LoggingAgentScrapeConfigPrefix == "" {
+		return "", nil
+	}
+	configMapList := &corev1.ConfigMapList{}
+	if err := r.List(ctx, configMapList, ctrlruntimeclient.InNamespace(resources.UserClusterMLANamespace)); err != nil {
+		return "", fmt.Errorf("failed to list the configmap: %w", err)
+	}
+	customScrapeConfigs := ""
+	for _, configMap := range configMapList.Items {
+		if !strings.HasPrefix(configMap.GetName(), r.userClusterMLA.LoggingAgentScrapeConfigPrefix) {
 			continue
 		}
 		for _, v := range configMap.Data {

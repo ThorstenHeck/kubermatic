@@ -97,6 +97,7 @@ type controllerRunOptions struct {
 	userClusterLogging                bool
 	userClusterMonitoring             bool
 	monitoringAgentScrapeConfigPrefix string
+	loggingAgentScrapeConfigPrefix 	  string
 	ccmMigration                      bool
 	ccmMigrationCompleted             bool
 	nutanixCSIEnabled                 bool
@@ -146,6 +147,7 @@ func main() {
 	flag.BoolVar(&runOp.userClusterLogging, "user-cluster-logging", false, "Enable logging in user cluster.")
 	flag.BoolVar(&runOp.userClusterMonitoring, "user-cluster-monitoring", false, "Enable monitoring in user cluster.")
 	flag.StringVar(&runOp.monitoringAgentScrapeConfigPrefix, "monitoring-agent-scrape-config-prefix", "monitoring-scraping", fmt.Sprintf("The name prefix of ConfigMaps in namespace %s, which will be used to add customized scrape configs for user cluster monitoring Agent.", resources.UserClusterMLANamespace))
+	flag.StringVar(&runOp.loggingAgentScrapeConfigPrefix, "logging-agent-scrape-config-prefix", "logging-scraping", fmt.Sprintf("The name prefix of Secrets in namespace %s, which will be used to add customized scrape configs for user cluster logging Agent.", resources.UserClusterMLANamespace))
 	flag.BoolVar(&runOp.ccmMigration, "ccm-migration", false, "Enable ccm migration in user cluster.")
 	flag.BoolVar(&runOp.ccmMigrationCompleted, "ccm-migration-completed", false, "cluster has been successfully migrated.")
 	flag.BoolVar(&runOp.nutanixCSIEnabled, "nutanix-csi-enabled", false, "enable Nutanix CSI")
@@ -312,6 +314,7 @@ func main() {
 			Monitoring:                        runOp.userClusterMonitoring,
 			MLAGatewayURL:                     runOp.mlaGatewayURL,
 			MonitoringAgentScrapeConfigPrefix: runOp.monitoringAgentScrapeConfigPrefix,
+			LoggingAgentScrapeConfigPrefix:	   runOp.loggingAgentScrapeConfigPrefix,
 		},
 		runOp.clusterName,
 		runOp.nutanixCSIEnabled,
